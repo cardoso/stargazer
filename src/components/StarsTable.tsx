@@ -77,9 +77,9 @@ function StarsTable(page: any) {
     return {
       name: name, 
       stars: repo.item.stargazers.count, 
-      thisWeek: `${thisWeek > 0 ? '+' : ''}${thisWeek}${symbol}`,
-      lastWeek: `${lastWeek > 0 ? '+' : ''}${lastWeek}`,
-      twoWeeksAgo: `${twoWeeksAgo > 0 ? '+' : ''}${twoWeeksAgo}`,
+      thisWeek: `${thisWeek}${symbol}`,
+      lastWeek: `${lastWeek}`,
+      twoWeeksAgo: `${twoWeeksAgo}`,
       lastStarred: starredAt ? <Moment fromNow date={starredAt} /> : 'Never',
     }
   })

@@ -67,9 +67,15 @@ function StarsTable(page: any) {
     totalTwoWeeksAgo += twoWeeksAgo;
 
     const starredAt = repo.item.stargazers.page[0]?.starredAt;
+    const name = (
+      <span>
+        <a href={`https://github.com/getstream/${repo.item.name}`}>{repo.item.name}</a>
+        <a className="graphLink" href="#"> 📈</a>
+      </span>
+    );
 
     return {
-      name: <a href={`https://github.com/getstream/${repo.item.name}`}>{repo.item.name}</a>, 
+      name: name, 
       stars: repo.item.stargazers.count, 
       thisWeek: `${thisWeek > 0 ? '+' : ''}${thisWeek}${symbol}`,
       lastWeek: `${lastWeek > 0 ? '+' : ''}${lastWeek}`,
@@ -159,6 +165,10 @@ const Styles = styled.div`
 
       a {
         color: white;
+      }
+
+      .graphLink {
+        text-decoration: none;
       }
 
       :last-child {

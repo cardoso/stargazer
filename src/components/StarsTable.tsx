@@ -47,15 +47,17 @@ function StarsTable(page: any) {
 
   const tableData = page.page.map((repo: any) => {
     const thisWeek = repo.item.stargazers.page.filter((curr: any) => {
-      return moment(curr.starredAt).isoWeek() === moment().isoWeek();
+      return moment().isSame(moment(curr.starredAt), "week");
     }).length;
 
     const lastWeek = repo.item.stargazers.page.filter((curr: any) => {
-      return moment(curr.starredAt).isoWeek() === moment().isoWeek() - 1; 
+      const a = moment().isoWeek(moment().isoWeek() - 1);
+      return a.isSame(moment(curr.starredAt), "week"); 
     }).length;
 
     const twoWeeksAgo = repo.item.stargazers.page.filter((curr: any) => {
-      return moment(curr.starredAt).isoWeek() === moment().isoWeek() - 2;
+      const a = moment().isoWeek(moment().isoWeek() - 2);
+      return a.isSame(moment(curr.starredAt), "week"); 
     }).length;
 
     let symbol = ''

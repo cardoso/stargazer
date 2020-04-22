@@ -3,6 +3,7 @@ import { useTable, useSortBy } from 'react-table';
 import styled from 'styled-components';
 import moment from 'moment';
 import Moment from 'react-moment';
+import orgName from '../lib/orgName';
 
 declare module 'react-table' {
   interface Row<D> extends UseExpandedRowProps<D> { }
@@ -71,7 +72,7 @@ function StarsTable(page: any) {
     const starredAt = repo.item.stargazers.page[0]?.starredAt;
     const name = (
       <span>
-        <a href={`https://github.com/getstream/${repo.item.name}`}>{repo.item.name}</a>
+        <a href={`https://github.com/${orgName}/${repo.item.name}`}>{repo.item.name}</a>
         <a className="graphLink" href="#"> 📈</a>
       </span>
     );

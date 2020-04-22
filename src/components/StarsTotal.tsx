@@ -2,10 +2,11 @@ import React,  { useState, useEffect } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import StarsTable from './StarsTable';
+import orgName from '../lib/orgName';
 
 const STARGAZERS = gql`
   {
-    organization(login: "getstream") {
+    organization(login: "${orgName}") {
       repositories(first: 100, isFork: false, isLocked: false, privacy: PUBLIC, ownerAffiliations: [OWNER], orderBy: {field: STARGAZERS, direction: DESC}) {
         page: edges {
           cursor: cursor

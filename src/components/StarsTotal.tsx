@@ -17,7 +17,7 @@ const STARGAZERS = gql`
               page: edges {
                 starredAt
                 item: node {
-                  name
+                  login
                 }
               }
             }
@@ -30,6 +30,7 @@ const STARGAZERS = gql`
 
 function StarsTotal() {
   const { loading, error, data } = useQuery(STARGAZERS);
+  
 
   if(error) {
     return <p>Error: {error?.message}</p>;
@@ -41,7 +42,7 @@ function StarsTotal() {
 
   const page = data?.organization.repositories.page
   const totalStars: Number = page.reduce((acc: Number, curr: any) => {
-    return acc + curr.item.stargazers.count
+    return acc + curr.item.stargazers.count;
   }, 0);
 
   return (

@@ -1,5 +1,7 @@
 import React from 'react';
 import { useTable, useSortBy } from 'react-table';
+import { useQuery } from '@apollo/react-hooks';
+import { gql } from 'apollo-boost';
 import styled from 'styled-components';
 import moment from 'moment';
 import Moment from 'react-moment';
@@ -10,6 +12,21 @@ declare module 'react-table' {
   interface ColumnInstance<D extends object = {}> extends UseSortByColumnProps<D> { }
   interface TableOptions<D extends object = {}> extends UseSortByOptions<D> { }
 }
+
+const ORG_MEMBERS = gql`
+{ 
+  organization(login: "${orgName}") {
+    membersWithRole(first: 100) {
+      page: edges {
+        cursor: cursor
+        item: node {
+          login
+        }
+      }
+    }
+  }
+}
+`
 
 function StarsTable(page: any) {
   const columns = React.useMemo(
@@ -42,32 +59,66 @@ function StarsTable(page: any) {
     []
   );
 
+  const { loading, error, data } = useQuery(ORG_MEMBERS);
+
+  if(error) {
+    return <p>Error: {error?.message}</p>;
+  }
+
+  if(loading) {
+    return <p>Filtering stars from org members...</p>
+  }
+
   let totalThisWeek = 0;
   let totalLastWeek = 0;
   let totalTwoWeeksAgo = 0;
 
-  const tableData = page.page.map((repo: any) => {
-    const thisWeek = repo.item.stargazers.page.filter((curr: any) => {
-      return moment().isSame(moment(curr.starredAt), "week");
-    }).length;
+  const filteredTotal = {
+    thisWeek: 0,
+    lastWeek: 0,
+    twoWeeksAgo: 0
+  }
 
-    const lastWeek = repo.item.stargazers.page.filter((curr: any) => {
+  const filterUsernames = data.organization.membersWithRole.page.map((e: any) => e.item.login);
+
+  const tableData = page.page.map((repo: any) => {
+    const stargazers = repo.item.stargazers.page;
+    
+    const thisWeek = stargazers.filter((curr: any) => {
+      return moment().isSame(moment(curr.starredAt), "week");
+    });
+
+    const lastWeek = stargazers.filter((curr: any) => {
       const a = moment().isoWeek(moment().isoWeek() - 1);
       return a.isSame(moment(curr.starredAt), "week"); 
-    }).length;
+    });
 
-    const twoWeeksAgo = repo.item.stargazers.page.filter((curr: any) => {
+    const twoWeeksAgo = stargazers.filter((curr: any) => {
       const a = moment().isoWeek(moment().isoWeek() - 2);
       return a.isSame(moment(curr.starredAt), "week"); 
-    }).length;
+    });
 
     let symbol = ''
     if(thisWeek > lastWeek) symbol = '💚'
     if(thisWeek < lastWeek) symbol = '🔻'
 
-    totalThisWeek += thisWeek;
-    totalLastWeek += lastWeek;
-    totalTwoWeeksAgo += twoWeeksAgo;
+    const filter = (e: any) => e.filter((curr: any) => {
+      return !filterUsernames.includes(curr.item.login);
+    });
+
+    const filtered = {
+      thisWeek: filter(thisWeek),
+      lastWeek: filter(lastWeek),
+      twoWeeksAgo: filter(twoWeeksAgo)
+    }
+
+    totalThisWeek += thisWeek.length;
+    totalLastWeek += lastWeek.length;
+    totalTwoWeeksAgo += twoWeeksAgo.length;
+
+    filteredTotal.thisWeek += filtered.thisWeek.length;
+    filteredTotal.lastWeek += filtered.lastWeek.length;
+    filteredTotal.twoWeeksAgo += filtered.twoWeeksAgo.length;
 
     const starredAt = repo.item.stargazers.page[0]?.starredAt;
     const name = (
@@ -80,9 +131,9 @@ function StarsTable(page: any) {
     return {
       name: name, 
       stars: repo.item.stargazers.count, 
-      thisWeek: `${thisWeek}${symbol}`,
-      lastWeek: `${lastWeek}`,
-      twoWeeksAgo: `${twoWeeksAgo}`,
+      thisWeek: `${thisWeek.length} (${filtered.thisWeek.length})${symbol}`,
+      lastWeek: `${lastWeek.length} (${filtered.lastWeek.length})`,
+      twoWeeksAgo: `${twoWeeksAgo.length} (${filtered.twoWeeksAgo.length})`,
       lastStarred: starredAt ? <Moment fromNow date={starredAt} /> : 'Never',
     }
   })
@@ -93,9 +144,9 @@ function StarsTable(page: any) {
 
   return (
     <div>
-      <p>This Week: +{totalThisWeek}{symbol}</p>
-      <p>Last Week: +{totalLastWeek}</p>
-      <p>Two Weeks Ago: +{totalTwoWeeksAgo}</p>
+      <p>This Week: +{totalThisWeek} ({filteredTotal.thisWeek}){symbol}</p>
+      <p>Last Week: +{totalLastWeek} ({filteredTotal.lastWeek})</p>
+      <p>Two Weeks Ago: +{totalTwoWeeksAgo} ({filteredTotal.twoWeeksAgo})</p>
       <Styles>
         <Table columns={columns} data={tableData} />
       </Styles>
